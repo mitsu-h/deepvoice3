@@ -44,6 +44,8 @@
   
 変更点として，メルスペクトログラム，スペクトログラム，WORLD Vocoderのパラメータ全てを出力するようにしている．
 
+また，`hparams.py`の`key_position_rate`及び`world_upsample`は`python comute_timestamp_ratio.py <data-root>`を実行することで求める事ができる．
+
 ### 学習
 使い方：
 ```
