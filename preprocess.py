@@ -8,6 +8,7 @@ options:
     --num_workers=<n>        Num workers.
     --hparams=<parmas>       Hyper parameters [default: ].
     --preset=<json>          Path of preset parameters (json).
+    --only_spec              if you only need spectrogram
     -h, --help               Show help message.
 """
 from docopt import docopt
@@ -18,9 +19,9 @@ import importlib
 from hparams import hparams, hparams_debug_string
 
 
-def preprocess(mod, in_dir, out_dir, num_workers):
+def preprocess(mod, in_dir, out_dir, num_workers, only_spec):
     os.makedirs(out_dir, exist_ok=True)
-    metadata = mod.build_from_path(in_dir, out_dir, num_workers, tqdm=tqdm)
+    metadata = mod.build_from_path(in_dir, out_dir, num_workers, tqdm=tqdm, only_spec=only_spec)
     write_metadata(metadata, out_dir)
 
 
@@ -48,6 +49,7 @@ if __name__ == "__main__":
     in_dir = args["<in_dir>"]
     out_dir = args["<out_dir>"]
     num_workers = args["--num_workers"]
+    only_spec = args["--only_spec"]
     num_workers = cpu_count() if num_workers is None else int(num_workers)
     preset = args["--preset"]
 
@@ -62,4 +64,4 @@ if __name__ == "__main__":
 
     assert name in ["jsut", "ljspeech", "vctk", "nikl_m", "nikl_s", "json_meta"]
     mod = importlib.import_module(name)
-    preprocess(mod, in_dir, out_dir, num_workers)
+    preprocess(mod, in_dir, out_dir, num_workers, only_spec)
