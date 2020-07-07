@@ -139,7 +139,7 @@ def collate_fn(batch):
     # if b_pad > 0:
     #    s, e = s - 1, e - 1
     frame_positions = torch.arange(s, e).long().unsqueeze(0).expand(
-        len(batch), max_decoder_target_len)
+        len(batch), max_decoder_target_len).clone()
 
     # done flags
     done = np.array([tm._pad(np.zeros(len(x[1]) // r - 1),

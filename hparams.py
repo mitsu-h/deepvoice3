@@ -36,8 +36,8 @@ hparams = hparam_tf.hparam.HParams(
     fmin=125,
     fmax=7600,
     fft_size=4096,
-    fft_wsize=2400,
-    hop_size=600, #fft_wsize/4
+    fft_wsize=2205,
+    hop_size=2205//4, #fft_wsize/4
     sample_rate=22050,
     preemphasis=0.97,
     min_level_db=-100,
@@ -89,7 +89,7 @@ hparams = hparam_tf.hparam.HParams(
     use_decoder_state_for_postnet_input=True,
 
     # Data loader
-    pin_memory=False,
+    pin_memory=True,
     num_workers=5,  # Set it to 1 when in Windows (MemoryError, THAllocator.c 0x5)
 
     # Training:
@@ -114,7 +114,7 @@ hparams = hparam_tf.hparam.HParams(
     # Eval:
     # this can be list for multple layers of attention
     # e.g., [True, False, False, False, True]
-    force_monotonic_attention=[False,False,False,False],
+    force_monotonic_attention=[False,False,True,False],
     # Attention constraint for incremental decoding
     window_ahead=3,
     # 0 tends to prevent word repretetion, but sometime causes skip words
