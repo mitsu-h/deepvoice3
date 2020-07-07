@@ -131,7 +131,7 @@ def collate_fn(batch):
 
     rw = int(r * hparams.world_upsample)
 
-    d = np.array([np.pad(x[2], (rw, max_world_len - len(x[3]) - rw), mode="constant") for x in batch], dtype=np.float32)
+    d = np.array([np.pad(x[2], (rw, max_world_len - len(x[2]) - rw), mode="constant") for x in batch], dtype=np.float32)
     f0_batch = torch.FloatTensor(d)
     e = np.array([tm._pad_2d(x[3], max_world_len, b_pad=rw) for x in batch], dtype=np.float32)
     sp_batch = torch.FloatTensor(e)
