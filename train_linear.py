@@ -351,7 +351,7 @@ if __name__ == "__main__":
 
     # Load checkpoints
     if checkpoint_path is not None:
-        model, global_step, global_epoch = tm.load_checkpoint(checkpoint_path, model.postnet, optimizer, reset_optimizer)
+        model, global_step, global_epoch = tm.load_checkpoint(checkpoint_path, model, optimizer, reset_optimizer)
     # Load embedding
     if load_embedding is not None:
         print("Loading embedding from {}".format(load_embedding))

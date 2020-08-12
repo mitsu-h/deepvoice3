@@ -374,12 +374,12 @@ def save_states(global_step, writer, mel_outputs, converter_outputs, attn, mel, 
     # Predicted mel spectrogram
     if mel_outputs is not None:
         mel_output = mel_outputs[idx].cpu().data.numpy()
-        mel_output = prepare_spec_image(audio._denormalize(mel_output))
+        mel_output = prepare_spec_image(mel_output)#(audio._denormalize(mel_output))
         writer.add_image("Predicted mel spectrogram", mel_output.transpose(2,0,1), global_step)
 
         #target
         mel_output = mel[idx].cpu().data.numpy()
-        mel_output = prepare_spec_image(audio._denormalize(mel_output))
+        mel_output = prepare_spec_image(mel_output)#(audio._denormalize(mel_output))
         writer.add_image("Target mel spectrogram", mel_output.transpose(2, 0, 1), global_step)
 
     if converter_outputs is not None:

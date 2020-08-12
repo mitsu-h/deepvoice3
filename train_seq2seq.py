@@ -189,7 +189,7 @@ def eval_model(global_step, writer, device, model, checkpoint_dir, ismultispeake
                     sequence, text_positions=text_positions, speaker_ids=speaker_ids)
             alignments = alignments[0].cpu().data.numpy()
             mel = mel[0].cpu().data.numpy()
-            mel = audio._denormalize(mel)
+            #mel = audio._denormalize(mel)
 
             # Alignment
             for i, alignment in enumerate(alignments, 1):

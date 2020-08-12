@@ -33,11 +33,11 @@ hparams = hparam_tf.hparam.HParams(
 
     # Audio:
     num_mels=80,
-    fmin=125,
-    fmax=7600,
-    fft_size=4096,
-    fft_wsize=1102,
-    hop_size=1102//4, #fft_wsize/4
+    fmin=0,
+    fmax=8000,
+    fft_size=1024,
+    fft_wsize=1024,
+    hop_size=1024//4, #fft_wsize/4
     sample_rate=22050,
     preemphasis=0.97,
     min_level_db=-100,
@@ -79,7 +79,7 @@ hparams = hparam_tf.hparam.HParams(
     num_converter_layer=5,
     query_position_rate=1.0,
     # can be computed by `compute_timestamp_ratio.py`.
-    key_position_rate=1.38,  # 2.37 for jsut
+    key_position_rate=1.48,  # 2.37 for jsut
     position_weight=1.0,
     use_memory_mask=False,
     trainable_positional_encodings=True,
@@ -101,20 +101,20 @@ hparams = hparam_tf.hparam.HParams(
     initial_learning_rate=1e-3,
     lr_schedule=None,
     lr_schedule_kwargs={},
-    nepochs=1000,
+    nepochs=650,
     weight_decay=0.0,
     max_clip=100.0,
     clip_thresh=5.0,
 
     # Save
     checkpoint_interval=10000,  #test
-    eval_interval=50000,
+    eval_interval=1,
     save_optimizer_state=True,
 
     # Eval:
     # this can be list for multple layers of attention
     # e.g., [True, False, False, False, True]
-    force_monotonic_attention=[False,False,True,False],
+    force_monotonic_attention=[False,True,False,False],
     # Attention constraint for incremental decoding
     window_ahead=3,
     # 0 tends to prevent word repretetion, but sometime causes skip words

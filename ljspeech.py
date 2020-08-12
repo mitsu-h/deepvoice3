@@ -4,6 +4,7 @@ import numpy as np
 import os
 import audio
 from hparams import hparams
+import librosa
 
 import time
 
@@ -62,8 +63,13 @@ def _process_utterance(out_dir, index, wav_path, text):
     if hparams.rescaling:
         wav = wav / np.abs(wav).max() * hparams.rescaling_max
 
-
-
+    #wav = audio.preemphasis(wav)
+    #melはパワースペクトラムで計算しない(power=1.0がそれ)
+    mel_spectrogram = librosa.feature.melspectrogram(wav, n_fft=1024,hop_length=256,n_mels=80,fmin=0.0,fmax=8000,power=1.0)
+    mel_spectrogram = np.log(np.abs(mel_spectrogram).clip(1e-5,10)).astype(np.float32)
+    n_frames = mel_spectrogram.shape[1]
+    world_frames = 1
+    '''
     # Compute the linear-scale spectrogram from the wav:
     spectrogram = audio.spectrogram(wav).astype(np.float32)
     n_frames = spectrogram.shape[1]
@@ -78,7 +84,7 @@ def _process_utterance(out_dir, index, wav_path, text):
     sp = audio._normalize(sp).astype(np.float32)
     ap = ap.astype(np.float32) #apは0~1の範囲しか値を取らないので正規化不要
     world_frames = f0.shape[0]
-    
+    '''
 
 
 
@@ -90,11 +96,11 @@ def _process_utterance(out_dir, index, wav_path, text):
     f0_filename = 'ljspeech-f0-%05d.npy' % index
     sp_filename = 'ljspeech-sp-%05d.npy' % index
     ap_filename = 'ljspeech-ap-%05d.npy' % index
-    np.save(os.path.join(out_dir, spectrogram_filename), spectrogram.T, allow_pickle=False)
+    #np.save(os.path.join(out_dir, spectrogram_filename), spectrogram.T, allow_pickle=False)
     np.save(os.path.join(out_dir, mel_filename), mel_spectrogram.T, allow_pickle=False)
-    np.save(os.path.join(out_dir, f0_filename), f0, allow_pickle=False)
-    np.save(os.path.join(out_dir, sp_filename), sp, allow_pickle=False)
-    np.save(os.path.join(out_dir, ap_filename), ap, allow_pickle=False)
+    #np.save(os.path.join(out_dir, f0_filename), f0, allow_pickle=False)
+    #np.save(os.path.join(out_dir, sp_filename), sp, allow_pickle=False)
+    #np.save(os.path.join(out_dir, ap_filename), ap, allow_pickle=False)
     
 
 

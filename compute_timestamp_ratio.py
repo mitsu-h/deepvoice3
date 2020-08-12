@@ -35,7 +35,7 @@ if __name__ == "__main__":
     # Code below
     X = FileSourceDataset(TextDataSource(data_root))
     Mel = FileSourceDataset(MelSpecDataSource(data_root))
-    F0 = FileSourceDataset(F0DataSource(data_root))
+    F0 = FileSourceDataset(F0DataSource('./data_ljspeech_4096/'))
 
     in_sizes = []
     out_sizes = []
