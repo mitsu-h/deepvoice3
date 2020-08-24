@@ -83,7 +83,7 @@ def tts(model, text, p=0, speaker_id=None, fast=False):
 
     return waveform, alignment, spectrogram, mel
 
-def tts_use_waveglow(model, text, waveglow_path, p=0, speaker_id=None, fast=True, denoiser_strength=0.4):
+def tts_use_waveglow(model, text, waveglow_path, p=0, speaker_id=None, fast=True, denoiser_strength=0.1):
     model = model.to(device)
     model.eval()
     if fast:
@@ -107,7 +107,7 @@ def tts_use_waveglow(model, text, waveglow_path, p=0, speaker_id=None, fast=True
     with torch.no_grad():
         mel, alignments, done = model(
             sequence, text_positions=text_positions, speaker_ids=speaker_ids)
-        waveform = waveglow.infer(mel.transpose(1,2), sigma=0.8)
+        waveform = waveglow.infer(mel.transpose(1,2), sigma=0.6)
     alignments = alignments[0].cpu().data.numpy()
     mel = mel[0].cpu().data.numpy()
     if denoiser_strength > 0:
