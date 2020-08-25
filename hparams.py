@@ -101,14 +101,14 @@ hparams = hparam_tf.hparam.HParams(
     initial_learning_rate=1e-3,
     lr_schedule=None,
     lr_schedule_kwargs={},
-    nepochs=650,
+    nepochs=1000,
     weight_decay=0.0,
     max_clip=100.0,
     clip_thresh=5.0,
 
     # Save
     checkpoint_interval=10000,  #test
-    eval_interval=1,
+    eval_interval=10000,
     save_optimizer_state=True,
 
     # Eval:

@@ -90,6 +90,10 @@ def tts_use_waveglow(model, text, waveglow, p=0, speaker_id=None, fast=True, den
     if fast:
         model.make_generation_fast_()
 
+    if denoiser_strength > 0:
+        denoiser = Denoiser(waveglow).to(device)
+    for k in waveglow.convinv:
+        k.float()
     waveglow = waveglow.to(device)
     waveglow.eval()
 
@@ -162,10 +166,6 @@ if __name__ == "__main__":
     # load waveglow
     waveglow = torch.load(waveglow_path, map_location=device)['model']
     waveglow = waveglow.remove_weightnorm(waveglow)
-    if denoiser_strength > 0:
-        denoiser = Denoiser(waveglow).to(device)
-    for k in waveglow.convinv:
-        k.float()
 
     model.seq2seq.decoder.max_decoder_steps = max_decoder_steps
 

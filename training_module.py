@@ -52,6 +52,7 @@ from matplotlib import cm
 from warnings import warn
 from hparams import hparams, hparams_debug_string
 import time
+sys.path.insert(0,'waveglow')
 
 use_cuda = torch.cuda.is_available()
 if use_cuda:
@@ -290,13 +291,8 @@ def eval_model(global_step, writer, device, model, checkpoint_dir, ismultispeake
     model_eval.load_state_dict(model.state_dict())
 
     # load waveglow
-    from waveglow.denoiser import Denoiser
-    waveglow = torch.load(waveglow_path, map_location=device)['model']
+    waveglow = torch.load(waveglow_path)['model']
     waveglow = waveglow.remove_weightnorm(waveglow)
-    if denoiser_strength > 0:
-        denoiser = Denoiser(waveglow).to(device)
-    for k in waveglow.convinv:
-        k.float()
 
     # hard coded
     speaker_ids = [0, 1, 10] if ismultispeaker else [None]
@@ -306,7 +302,7 @@ def eval_model(global_step, writer, device, model, checkpoint_dir, ismultispeake
         for idx, text in enumerate(texts, 1):
             if waveglow_path is not None:
                 signal, alignments, mel = synthesis.tts_use_waveglow(
-                    model, text, waveglow, p=1, speaker_id=speaker_id, fast=True, denoiser_strength=denoiser_strength)
+                    model_eval, text, waveglow, p=1, speaker_id=speaker_id, fast=True, denoiser_strength=denoiser_strength)
             else:
                 signal, alignments, _, mel = synthesis.tts(
                     model_eval, text, p=1, speaker_id=speaker_id, fast=True)
@@ -438,7 +434,7 @@ def save_states(global_step, writer, mel_outputs, converter_outputs, attn, mel, 
 
     if waveglow_path is not None:
         # load waveglow
-        from waveglow.denoiser import Denoiser
+        from denoiser import Denoiser
         waveglow = torch.load(waveglow_path, map_location=device)['model']
         waveglow = waveglow.remove_weightnorm(waveglow)
         if denoiser_strength > 0:
