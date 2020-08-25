@@ -10,21 +10,53 @@
 
 1. [arXiv:1710.07654](https://arxiv.org/abs/1710.07654): Deep Voice 3: Scaling Text-to-Speech with Convolutional Sequence Learning.
 
+#use_waveglow Repository
+[WaveGlow](https://github.com/NVIDIA/waveglow) を利用できるように修正．ただし，こちらのRepositoryをforkして，それをsubmoduleとして扱えるようにWaveGlowも修正している．
+masterとの変更点として
+- WaveGlowに合わせてメルスペクトログラムのfft_size等を調整
+- メルスペクトログラムを正規化せずに学習
+- このRepositoryでは，waveglowを利用する前提のため，Linear, WORLDの学習データは出力しない
+- LJSpeechのみ対応
+
+
+##Setup
+###cloneする場合
+
+```
+git clone https://github.com/mitsu-h/deepvoice3
+cd deepvoice3
+git submodule init
+git submodule update
+```
+
+###master Repositoryをforkしている場合
+
+```
+git remote add upstream git://github.com/mitsu-h/deepvoice3
+git fetch upstream
+git branch use_waveglow
+git checkout use_waveglow
+git merge upstream/use_waveglow
+```
+
+##学習済みモデル
+- [本家の学習済みデータ](https://drive.google.com/file/d/1rpK8CzAAirq9sWZhe9nlfvxMF1dRgFbF/view)
+- [deepvoice3のメルスペクトログラムでファインチューニング](https://drive.google.com/file/d/1voxcNRVwMhaOKUAk6MhLkU5lbhdyONSP/view?usp=sharing)
+
+download後，適当なフォルダに配置する．使用する学習済みデータはお好みの方を選択
+
+
 ## Requirements
 [torch13.yml](torch13.yml)参照
 
 また，コンソールで`python -c "import nltk; nltk.download('cmudict')"`を実行して音素辞書のダウンロードをする．
 ## Getting started
 ### 概要
-このリポジトリでは，weight_norm変更に伴い，text-to-melのみの学習を行う場合，VocoderにGriffin-Limを用いる場合，WORLDを用いる場合の3つに分けて実装した．
 - データの前処理：[preprocess.py](preprocess.py)
-- 学習：
-  - text-to-melのみ：[train_seq2seq.py](train_seq2seq.py)
-  - Griffin-Lim：[train_linear.py](train_linear.py)
-  - WORLD：[train_world](train_world.py)
+- 学習：：[train_seq2seq.py](train_seq2seq.py)
 - 推論：[synthesis.py](synthesis.py)
 
-また，ハイパーパラメータは`hparams.py`で主に設定を行う．
+また，ハイパーパラメータは`hparams.py`で主に設定を行う．ただし，メルスペクトログラムのパラメータは`ljspeech.py`で調整を行う．
 ### データの準備
 このリポジトリでは，英語話者のみ学習を行ったため，他言語に関する動作は保証しない
 - LJSpeech：https://keithito.com/LJ-Speech-Dataset/
@@ -49,18 +81,15 @@
 ### 学習
 使い方：
 ```
-python train_${training_type}.py --data-root=${data-root} --log-event-path=${log_dir} --checkpoint=${checkpoint_path}
+python train_${training_type}.py --data-root=${data-root} --log-event-path=${log_dir} --checkpoint=${checkpoint_path} --waveglow_path=${waveglow_path}
 ```
 `--checkpoint`は学習済みのデータを再学習する場合のみ指定．
 
 ### 推論
-学習済みデータを用いて，自己回帰で推論を行う．
+学習済みデータを用いて，自己回帰で推論を行う．waveglowを利用する場合，
 ```
-python synthesis.py --type=${vocoder_type} ${checkpoint_path} ${test_list.txt} ${output_dir}
+python synthesis.py --type='seq2seq' --waveglow_path=${waveglow_path} ${checkpoint_path} ${test_list.txt} ${output_dir}
 ```
 
-`--type`は学習したネットワークに応じて`linear`もしくは`world`と指定する．（デフォルトは`linear`）
+）
 
-## Future work
-- Neutral Vocoderでも合成できるように`synthesis.py`を修正する
-- VCTKでVocoderがWORLDのとき，alignmentが上手く収束しないので，原因を探す
