@@ -8,6 +8,7 @@ options:
     --hparams=<parmas>                Hyper parameters [default: ].
     --preset=<json>                   Path of preset parameters (json).
     --waveglow_path=<path>            Load waveglow model from checkpoint path.
+    --denoiser_strength=<N>               waveglow denoiser_strength [default: 0.1]
     --file-name-suffix=<s>            File name suffix [default: ].
     --max-decoder-steps=<N>           Max decoder steps [default: 500].
     --replace_pronunciation_prob=<N>  Prob [default: 0.5].
@@ -83,20 +84,14 @@ def tts(model, text, p=0, speaker_id=None, fast=False):
 
     return waveform, alignment, spectrogram, mel
 
-def tts_use_waveglow(model, text, waveglow_path, p=0, speaker_id=None, fast=True, denoiser_strength=0.1):
+def tts_use_waveglow(model, text, waveglow, p=0, speaker_id=None, fast=True, denoiser_strength=0.1):
     model = model.to(device)
     model.eval()
     if fast:
         model.make_generation_fast_()
-    #load waveglow
-    waveglow = torch.load(waveglow_path, map_location=device)['model']
-    if denoiser_strength > 0:
-        denoiser = Denoiser(waveglow).to(device)
+
     waveglow = waveglow.to(device)
     waveglow.eval()
-    for k in waveglow.convinv:
-        k.float()
-
 
     sequence = np.array(_frontend.text_to_sequence(text, p=p))
     sequence = torch.from_numpy(sequence).unsqueeze(0).long().to(device)
@@ -133,6 +128,7 @@ if __name__ == "__main__":
     text_list_file_path = args["<text_list_file>"]
     dst_dir = args["<dst_dir>"]
     waveglow_path = args["--waveglow_path"]
+    denoiser_strength = float(args["--denoiser_strength"])
     max_decoder_steps = int(args["--max-decoder-steps"])
     file_name_suffix = args["--file-name-suffix"]
     replace_pronunciation_prob = float(args["--replace_pronunciation_prob"])
@@ -163,6 +159,14 @@ if __name__ == "__main__":
     model.load_state_dict(checkpoint["state_dict"])
     checkpoint_name = splitext(basename(checkpoint_path))[0]
 
+    # load waveglow
+    waveglow = torch.load(waveglow_path, map_location=device)['model']
+    waveglow = waveglow.remove_weightnorm(waveglow)
+    if denoiser_strength > 0:
+        denoiser = Denoiser(waveglow).to(device)
+    for k in waveglow.convinv:
+        k.float()
+
     model.seq2seq.decoder.max_decoder_steps = max_decoder_steps
 
     os.makedirs(dst_dir, exist_ok=True)
@@ -174,7 +178,7 @@ if __name__ == "__main__":
             start = time.time()
             if waveglow_path is not None:
                 waveform, alignments, mel = tts_use_waveglow(
-                    model, text, waveglow_path, p=replace_pronunciation_prob, speaker_id=speaker_id, fast=True)
+                    model, text, waveglow, p=replace_pronunciation_prob, speaker_id=speaker_id, fast=True, denoiser_strength=denoiser_strength)
             else:
                 waveform, alignments, _, mel = tts(
                     model, text, p=replace_pronunciation_prob, speaker_id=speaker_id, fast=True)
