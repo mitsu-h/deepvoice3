@@ -269,7 +269,7 @@ def prepare_spec_image(spectrogram):
     return np.uint8(cm.magma(spectrogram.T) * 255)
 
 
-def eval_model(global_step, writer, device, model, checkpoint_dir, ismultispeaker):
+def eval_model(global_step, writer, device, model, checkpoint_dir, ismultispeaker, waveglow_path=None, denoiser_strength=0.1):
     # harded coded
     texts = [
         "And debtors might practically have as much as they liked%if they could only pay for it.",
@@ -289,14 +289,27 @@ def eval_model(global_step, writer, device, model, checkpoint_dir, ismultispeake
     model_eval = build_model(training_type=model.training_type).to(device)
     model_eval.load_state_dict(model.state_dict())
 
+    # load waveglow
+    from waveglow.denoiser import Denoiser
+    waveglow = torch.load(waveglow_path, map_location=device)['model']
+    waveglow = waveglow.remove_weightnorm(waveglow)
+    if denoiser_strength > 0:
+        denoiser = Denoiser(waveglow).to(device)
+    for k in waveglow.convinv:
+        k.float()
+
     # hard coded
     speaker_ids = [0, 1, 10] if ismultispeaker else [None]
     for speaker_id in speaker_ids:
         speaker_str = "multispeaker{}".format(speaker_id) if speaker_id is not None else "single"
 
         for idx, text in enumerate(texts, 1):
-            signal, alignments, _, mel = synthesis.tts(
-                model_eval, text, p=1, speaker_id=speaker_id, fast=True)
+            if waveglow_path is not None:
+                signal, alignments, mel = synthesis.tts_use_waveglow(
+                    model, text, waveglow, p=1, speaker_id=speaker_id, fast=True, denoiser_strength=denoiser_strength)
+            else:
+                signal, alignments, _, mel = synthesis.tts(
+                    model_eval, text, p=1, speaker_id=speaker_id, fast=True)
             signal /= np.max(np.abs(signal))
 
             # Alignment
@@ -327,7 +340,7 @@ def eval_model(global_step, writer, device, model, checkpoint_dir, ismultispeake
 
 
 def save_states(global_step, writer, mel_outputs, converter_outputs, attn, mel, y,
-                input_lengths, checkpoint_dir=None):
+                input_lengths, checkpoint_dir=None, waveglow_path=None, device='cpu', denoiser_strength=0.1):
 
     def save_world(tuple_outputs, save_str, global_step=global_step):
         _, tar_f0, tar_sp, tar_ap = tuple_outputs
@@ -422,6 +435,30 @@ def save_states(global_step, writer, mel_outputs, converter_outputs, attn, mel, 
             warn(str(e))
             pass
         audio.save_wav(signal, path)
+
+    if waveglow_path is not None:
+        # load waveglow
+        from waveglow.denoiser import Denoiser
+        waveglow = torch.load(waveglow_path, map_location=device)['model']
+        waveglow = waveglow.remove_weightnorm(waveglow)
+        if denoiser_strength > 0:
+            denoiser = Denoiser(waveglow).to(device)
+        for k in waveglow.convinv:
+            k.float()
+        waveglow = waveglow.to(device)
+        waveglow.eval()
+        with torch.no_grad():
+            waveform = waveglow.infer(mel_outputs[idx].unsqueeze(0).transpose(1, 2), sigma=0.6)
+        if denoiser_strength > 0:
+            waveform = denoiser(waveform, denoiser_strength).squeeze(0)
+        waveform = waveform[0].cpu().data.numpy()
+
+        try:
+            writer.add_audio("Predicted audio signal", waveform, global_step, sample_rate=hparams.sample_rate)
+        except Exception as e:
+            warn(str(e))
+            pass
+        audio.save_wav(waveform, path)
 
 
 def logit(x, eps=1e-8):

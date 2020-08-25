@@ -8,8 +8,7 @@ options:
     --hparams=<parmas>           Hyper parameters [default: ].
     --preset=<json>              Path of preset parameters (json).
     --checkpoint=<path>          Restore model from checkpoint path if given.
-    --checkpoint-seq2seq=<path>  Restore seq2seq model from checkpoint path.
-    --checkpoint-postnet=<path>  Restore postnet model from checkpoint path.
+    --waveglow_path=<path>       waveglow_path.
     --restore-parts=<path>       Restore part of the model.
     --log-event-path=<name>      Log event path.
     --reset-optimizer            Reset optimizer.
@@ -147,6 +146,7 @@ def collate_fn(batch):
     return x_batch, input_lengths, mel_batch, \
         (text_positions, frame_positions), done, target_lengths, speaker_ids
 
+
 #TODO: Neural Vocoderでテストできるようにする
 def eval_model(global_step, writer, device, model, checkpoint_dir, ismultispeaker):
     # harded coded
@@ -207,11 +207,13 @@ def eval_model(global_step, writer, device, model, checkpoint_dir, ismultispeake
 
 
 
+
 def train(device, model, data_loader, optimizer, writer,
           init_lr=0.002,
           checkpoint_dir=None, checkpoint_interval=None, nepochs=None,
           max_clip=100,
-          clip_thresh=1.0):
+          clip_thresh=1.0,
+          waveglow_path=None):
     r = hparams.outputs_per_step
     current_lr = init_lr
 
@@ -309,12 +311,15 @@ Please set a larger value for ``max_position`` in hyper parameters.""".format(
             if global_step > 0 and global_step % checkpoint_interval == 0:
                 tm.save_states(
                     global_step, writer, mel_outputs, converter_outputs, attn,
-                    mel, y, input_lengths, checkpoint_dir)
+                    mel, y, input_lengths, checkpoint_dir, waveglow_path=waveglow_path, device=device)
                 tm.save_checkpoint(
                     model, optimizer, global_step, checkpoint_dir, global_epoch)
 
             if global_step > 1e5 and global_step % hparams.eval_interval == 0 :
-                eval_model(global_step, writer, device, model, checkpoint_dir, ismultispeaker)
+                if waveglow_path is not None:
+                    tm.eval_model(global_step, writer, device, model, checkpoint_dir, ismultispeaker, waveglow_path=waveglow_path)
+                else:
+                    eval_model(global_step, writer, device, model, checkpoint_dir, ismultispeaker)
 
         averaged_loss = running_loss / (len(data_loader))
         writer.add_scalar("loss (per epoch)", averaged_loss, global_epoch)
@@ -327,8 +332,7 @@ if __name__ == "__main__":
     print("Command line args:\n", args)
     checkpoint_dir = args["--checkpoint-dir"]
     checkpoint_path = args["--checkpoint"]
-    checkpoint_seq2seq_path = args["--checkpoint-seq2seq"]
-    checkpoint_postnet_path = args["--checkpoint-postnet"]
+    waveglow_path = args['--waveglow_path']
     load_embedding = args["--load-embedding"]
     checkpoint_restore_parts = args["--restore-parts"]
     speaker_id = args["--speaker-id"]
@@ -421,7 +425,8 @@ if __name__ == "__main__":
               checkpoint_interval=hparams.checkpoint_interval,
               nepochs=hparams.nepochs,
               max_clip=hparams.max_clip,
-              clip_thresh=hparams.clip_thresh)
+              clip_thresh=hparams.clip_thresh,
+              waveglow_path=waveglow_path)
     except KeyboardInterrupt:
         tm.save_checkpoint(
             model, optimizer, global_step, checkpoint_dir, global_epoch)
