@@ -10,7 +10,8 @@
 
 1. [arXiv:1710.07654](https://arxiv.org/abs/1710.07654): Deep Voice 3: Scaling Text-to-Speech with Convolutional Sequence Learning.
 
-#use_waveglow Repository
+# use_waveglow Repository
+
 [WaveGlow](https://github.com/NVIDIA/waveglow) を利用できるように修正．ただし，こちらのRepositoryをforkして，それをsubmoduleとして扱えるようにWaveGlowも修正している．
 masterとの変更点として
 - WaveGlowに合わせてメルスペクトログラムのfft_size等を調整
@@ -19,8 +20,8 @@ masterとの変更点として
 - LJSpeechのみ対応
 
 
-##Setup
-###cloneする場合
+## Setup
+### cloneする場合
 
 ```
 git clone https://github.com/mitsu-h/deepvoice3
@@ -29,7 +30,7 @@ git submodule init
 git submodule update
 ```
 
-###master Repositoryをforkしている場合
+### master Repositoryをforkしている場合
 
 ```
 git remote add upstream git://github.com/mitsu-h/deepvoice3
@@ -39,7 +40,7 @@ git checkout use_waveglow
 git merge upstream/use_waveglow
 ```
 
-##学習済みモデル
+## 学習済みモデル
 - [本家の学習済みデータ](https://drive.google.com/file/d/1rpK8CzAAirq9sWZhe9nlfvxMF1dRgFbF/view)
 - [deepvoice3のメルスペクトログラムでファインチューニング](https://drive.google.com/file/d/1voxcNRVwMhaOKUAk6MhLkU5lbhdyONSP/view?usp=sharing)
 
