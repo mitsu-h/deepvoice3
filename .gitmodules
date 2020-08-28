@@ -1,4 +1,3 @@
 [submodule "waveglow"]
 	path = waveglow
 	url = https://github.com/mitsu-h/waveglow
-	branch = master
