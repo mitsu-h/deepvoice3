@@ -91,5 +91,4 @@ python train_${training_type}.py --data-root=${data-root} --log-event-path=${log
 python synthesis.py --type='seq2seq' --waveglow_path=${waveglow_path} ${checkpoint_path} ${test_list.txt} ${output_dir}
 ```
 
-）
 
