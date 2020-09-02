@@ -291,7 +291,7 @@ def eval_model(global_step, writer, device, model, checkpoint_dir, ismultispeake
     model_eval.load_state_dict(model.state_dict())
 
     # load waveglow
-    waveglow = torch.load(waveglow_path)['model']
+    waveglow = torch.load(waveglow_path, map_location=device)['model']
     waveglow = waveglow.remove_weightnorm(waveglow)
 
     # hard coded
